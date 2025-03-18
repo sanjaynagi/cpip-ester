@@ -23,12 +23,14 @@ rule extract_counts_for_hmm:
         counts = f"{RESULTS_DIR}/{{sample}}/counts/counts_for_hmm.tsv"
     log:
         "logs/cnv/counts/{sample}.log"
+    conda:
+        "../scripts/env.yaml"
     params:
         window_size = WINDOW_SIZE,
         interval = INTERVAL,
         min_mapq = MAPQ_THRESHOLD
     script:
-        "workflow/scripts/counts_for_hmm.py"
+        "../scripts/counts_for_hmm.py"
 
 # Calculate the proportion of MAPQ0 reads in each window
 rule calculate_mapq0_proportions:
@@ -38,11 +40,13 @@ rule calculate_mapq0_proportions:
         mapq0_proportions = f"{RESULTS_DIR}/{{sample}}/counts/mapq0_proportions.tsv"
     log:
         "logs/cnv/mapq0/{sample}.log"
+    conda:
+        "../scripts/env.yaml"
     params:
         window_size = WINDOW_SIZE,
         interval = INTERVAL
     script:
-        "workflow/scripts/calculate_mapq0_proportions.py"
+        "../scripts/calculate_mapq0_proportions.py"
 
 # Calculate windowed accessibility from GC content and MAPQ0 proportions
 rule calculate_accessibility:
@@ -53,11 +57,13 @@ rule calculate_accessibility:
         accessibility = f"{RESULTS_DIR}/{{sample}}/counts/accessibility.tsv"
     log:
         "logs/cnv/accessibility/{sample}.log"
+    conda:
+        "../scripts/env.yaml"
     params:
         mapq0_threshold = MAX_MAPQ0_PROPORTION,
         accessibility_threshold = ACCESSIBILITY_THRESHOLD
     script:
-        "workflow/scripts/calculate_accessibility.py"
+        "../scripts/calculate_accessibility.py"
 
 # Calculate median coverage by GC content
 rule calculate_median_coverage_by_gc:
@@ -68,10 +74,12 @@ rule calculate_median_coverage_by_gc:
     output:
         median_coverage = f"{RESULTS_DIR}/{{sample}}/counts/median_coverage_by_gc.tsv",
         variance = f"{RESULTS_DIR}/{{sample}}/counts/coverage_variance.tsv"
+    conda:
+        "../scripts/env.yaml"
     log:
         "logs/cnv/covgc/{sample}.log"
     script:
-        "workflow/scripts/calculate_median_coverage_by_gc.py"
+        "../scripts/calculate_median_coverage_by_gc.py"
 
 # Apply HMM for CNV calling
 rule run_hmm:
@@ -87,12 +95,14 @@ rule run_hmm:
         cnv_calls = f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv"
     log:
         "logs/cnv/hmm/{sample}.log"
+    conda:
+        "../scripts/env.yaml"
     params:
         transition_probability = TRANSITION_PROBABILITY,
         max_copy_number = MAX_COPY_NUMBER,
         max_mapq0_proportion = MAX_MAPQ0_PROPORTION
     script:
-        "workflow/scripts/hmm_process.py"
+        "../scripts/hmm_process.py"
 
 # Detect breakpoints for CNVs
 rule detect_breakpoints:
@@ -105,10 +115,12 @@ rule detect_breakpoints:
         post_clipping_fastq = f"{RESULTS_DIR}/{{sample}}/breakpoints/post_clipping.fastq"
     log:
         "logs/cnv/breakpoints/{sample}.log"
+    conda:
+        "../scripts/env.yaml"
     params:
         min_mapq = MAPQ_THRESHOLD
     script:
-        "workflow/scripts/breakpoint_detector.py"
+        "../scripts/breakpoint_detector.py"
 
 # Calculate modal CNVs for all genes in GFF
 rule calculate_modal_cnvs:
@@ -119,7 +131,9 @@ rule calculate_modal_cnvs:
         modal_cnvs = f"{RESULTS_DIR}/modal_cnvs.csv"
     log:
         "logs/cnv/modal_cnv.log"
+    conda:
+        "../scripts/env.yaml"
     params:
         samples = SAMPLE_NAMES
     script:
-        "workflow/scripts/modal_cnv.py"
+        "../scripts/modal_cnv.py"

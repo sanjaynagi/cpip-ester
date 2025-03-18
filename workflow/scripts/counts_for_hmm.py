@@ -3,9 +3,9 @@
 Count reads in genomic windows for HMM-based CNV detection
 """
 
-import pysam
 import pandas as pd
 import numpy as np
+import pysam
 from snakemake.shell import shell
 
 # Get inputs, outputs, and parameters from Snakemake

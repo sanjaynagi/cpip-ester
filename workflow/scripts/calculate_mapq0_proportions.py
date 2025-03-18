@@ -3,9 +3,9 @@
 Calculate the proportion of MAPQ0 reads in genomic windows
 """
 
-import pysam
 import pandas as pd
 import numpy as np
+import pysam
 
 # Get inputs, outputs, and parameters from Snakemake
 bam_file = snakemake.input.bam

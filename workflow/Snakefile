@@ -7,14 +7,32 @@ import random
 # Set minimum Snakemake version
 min_version("6.0")
 
+
 # Load the SRA metadata table
-metadata = pd.read_csv("resources/SraRunTable.csv")[:100].query("`Sample Name` not in ['SWE4', 'MTC1']")
+metadata = pd.read_csv("resources/SraRunTable.csv")
+SAMPLE_NAMES_WITH_2_SRRs =  metadata['Sample Name'].value_counts()[metadata['Sample Name'].value_counts() > 1].index.to_numpy()
+metadata = metadata[:100].query("`Sample Name` not in ['SWE4', 'MTC1']")
 
-# Create dictionary mapping sample names to SRR accessions
-sample_to_srr = dict(zip(metadata['Sample Name'], metadata['Run']))
+# Create dictionary mapping sample names to lists of SRR accessions
+sample_to_srr = {}
+for index, row in metadata.iterrows():
+    sample = row['Sample Name']
+    srr = row['Run']
+    if sample in sample_to_srr:
+        sample_to_srr[sample].append(srr)
+    else:
+        sample_to_srr[sample] = [srr]
 
-# Get all sample names
-SAMPLE_NAMES = metadata['Sample Name'].tolist()
+# Get all sample names (unique)
+SAMPLE_NAMES = list(sample_to_srr.keys())
+# filter out samples with more than 2 srrs for now TESTING ONLY ---- REMOVE FOR PRODUCTION
+SAMPLE_NAMES = [n for n in SAMPLE_NAMES  if n not in  SAMPLE_NAMES_WITH_2_SRRs]
+
+# Create a list of all sample-srr pairs for rules that process each SRR file
+SAMPLE_SRR_PAIRS = []
+for sample, srr_list in sample_to_srr.items():
+    for srr in srr_list:
+        SAMPLE_SRR_PAIRS.append((sample, srr))
 
 # Path to reference genome (chromosome of interest)
 REF_GENOME = "resources/Cquinq_JHB2020_CM027412.1_ester.fa" 
@@ -48,5 +66,5 @@ rule all:
         expand("results/coverage/{sample}.regions.bed.gz", sample=SAMPLE_NAMES),
         expand("results/gvcfs/{sample}.g.vcf.gz", sample=SAMPLE_NAMES),
         "results/vcf/filtered_snps.vcf.gz",
-        # f"{RESULTS_DIR}/modal_cnvs.csv"
-        # expand(f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv", sample=SAMPLE_NAMES),
+        #"results/modal_cnvs.csv"
+        expand(f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv", sample=SAMPLE_NAMES),
