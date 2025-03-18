@@ -1,0 +1,52 @@
+# Snakefile
+
+import pandas as pd
+from snakemake.utils import min_version
+import random
+
+# Set minimum Snakemake version
+min_version("6.0")
+
+# Load the SRA metadata table
+metadata = pd.read_csv("resources/SraRunTable.csv")[:100].query("`Sample Name` not in ['SWE4', 'MTC1']")
+
+# Create dictionary mapping sample names to SRR accessions
+sample_to_srr = dict(zip(metadata['Sample Name'], metadata['Run']))
+
+# Get all sample names
+SAMPLE_NAMES = metadata['Sample Name'].tolist()
+
+# Path to reference genome (chromosome of interest)
+REF_GENOME = "resources/Cquinq_JHB2020_CM027412.1_ester.fa" 
+GFF = "blah.gff"
+
+# Specify your region of interest (2Mb region)
+# REGION = "CM027412.1:135390000-139390000"  
+
+
+### CNV parameters ###
+# Window size for coverage calculation
+WINDOW_SIZE = 300
+INTERVAL = 300
+MAPQ_THRESHOLD = 10
+MAX_MAPQ0_PROPORTION = 0.5
+ACCESSIBILITY_THRESHOLD = 0.5
+MAX_COPY_NUMBER = 12
+TRANSITION_PROBABILITY = 0.00001
+
+include: "rules/alignment.smk"
+include: "rules/download.smk"
+include: "rules/variant-calling.smk"
+include: "rules/cnv-detection.smk"
+
+# Final output files
+rule all:
+    input:
+        # Final BAM files (2Mb region)
+        expand("results/region_bams/{sample}.sorted.bam", sample=SAMPLE_NAMES),
+        expand("results/region_bams/{sample}.sorted.bam.bai", sample=SAMPLE_NAMES),
+        expand("results/coverage/{sample}.regions.bed.gz", sample=SAMPLE_NAMES),
+        expand("results/gvcfs/{sample}.g.vcf.gz", sample=SAMPLE_NAMES),
+        "results/vcf/filtered_snps.vcf.gz",
+        # f"{RESULTS_DIR}/modal_cnvs.csv"
+        # expand(f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv", sample=SAMPLE_NAMES),

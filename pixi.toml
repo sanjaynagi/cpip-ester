@@ -1,0 +1,24 @@
+[project]
+channels = ["conda-forge", "bioconda"]
+name = "cpip-ester"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "3.11.*"
+jupyter = ">=1.1.1,<2"
+ipykernel = ">=6.29.5,<7"
+snakemake = ">=8.29.3,<9"
+papermill = ">=2.6.0,<3"
+plotly = ">=6.0.0,<7"
+pandas = ">=2.2.3,<3"
+mosdepth = ">=0.3.10,<0.4"
+jq = ">=1.7.1,<2"
+pigz = ">=2.8,<3"
+pysam = ">=0.23.0,<0.24"
+hmmlearn = ">=0.3.3,<0.4"
+
+[pypi-dependencies]
+ffq = ">=0.3.1, <0.4"
