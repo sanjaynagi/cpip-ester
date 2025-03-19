@@ -8,19 +8,21 @@ rule calculate_gc_content:
         gc_content = "results/gc_content.tsv"
     log:
         "logs/cnv/gc.log"
-    shell:
-        """
-        bedtools makewindows -g <(samtools faidx {input.reference}) -w {WINDOW_SIZE} -s {INTERVAL} | \
-        bedtools nuc -fi {input.reference} -bed - | \
-        awk 'BEGIN{{OFS="\\t"}} NR>1 {{print $1,$2,$5}}' > {output.gc_content}
-        """
+    params:
+        window_size = WINDOW_SIZE,
+        interval = INTERVAL
+    threads: 10
+    conda:
+        "../scripts/env.yaml"  # Optional: create conda environment with dependencies
+    script:
+        "../scripts/gc_content.py"
 
 # Extract read counts in windows
 rule extract_counts_for_hmm:
     input:
         bam = "results/region_bams/{sample}.sorted.bam"
     output:
-        counts = f"{RESULTS_DIR}/{{sample}}/counts/counts_for_hmm.tsv"
+        counts = f"{RESULTS_DIR}/cnv/counts/{{sample}}/counts_for_hmm.tsv"
     log:
         "logs/cnv/counts/{sample}.log"
     conda:
@@ -37,7 +39,7 @@ rule calculate_mapq0_proportions:
     input:
         bam = "results/region_bams/{sample}.sorted.bam"
     output:
-        mapq0_proportions = f"{RESULTS_DIR}/{{sample}}/counts/mapq0_proportions.tsv"
+        mapq0_proportions = f"{RESULTS_DIR}/cnv/counts/{{sample}}/mapq0_proportions.tsv"
     log:
         "logs/cnv/mapq0/{sample}.log"
     conda:
@@ -52,9 +54,9 @@ rule calculate_mapq0_proportions:
 rule calculate_accessibility:
     input:
         gc_content = "results/gc_content.tsv",
-        mapq0_proportions = f"{RESULTS_DIR}/{{sample}}/counts/mapq0_proportions.tsv"
+        mapq0_proportions = f"{RESULTS_DIR}/cnv/counts/{{sample}}/mapq0_proportions.tsv"
     output:
-        accessibility = f"{RESULTS_DIR}/{{sample}}/counts/accessibility.tsv"
+        accessibility = f"{RESULTS_DIR}/cnv/counts/{{sample}}/accessibility.tsv"
     log:
         "logs/cnv/accessibility/{sample}.log"
     conda:
@@ -68,12 +70,12 @@ rule calculate_accessibility:
 # Calculate median coverage by GC content
 rule calculate_median_coverage_by_gc:
     input:
-        counts = f"{RESULTS_DIR}/{{sample}}/counts/counts_for_hmm.tsv",
+        counts = f"{RESULTS_DIR}/cnv/counts/{{sample}}/counts_for_hmm.tsv",
         gc_content = "results/gc_content.tsv",
-        accessibility = f"{RESULTS_DIR}/{{sample}}/counts/accessibility.tsv"
+        accessibility = f"{RESULTS_DIR}/cnv/counts/{{sample}}/accessibility.tsv"
     output:
-        median_coverage = f"{RESULTS_DIR}/{{sample}}/counts/median_coverage_by_gc.tsv",
-        variance = f"{RESULTS_DIR}/{{sample}}/counts/coverage_variance.tsv"
+        median_coverage = f"{RESULTS_DIR}/cnv/counts/{{sample}}/median_coverage_by_gc.tsv",
+        variance = f"{RESULTS_DIR}/cnv/counts/{{sample}}/coverage_variance.tsv"
     conda:
         "../scripts/env.yaml"
     log:
@@ -84,15 +86,15 @@ rule calculate_median_coverage_by_gc:
 # Apply HMM for CNV calling
 rule run_hmm:
     input:
-        counts = f"{RESULTS_DIR}/{{sample}}/counts/counts_for_hmm.tsv",
+        counts = f"{RESULTS_DIR}/cnv/counts/{{sample}}/counts_for_hmm.tsv",
         gc_content = "results/gc_content.tsv",
-        median_coverage = f"{RESULTS_DIR}/{{sample}}/counts/median_coverage_by_gc.tsv",
-        variance = f"{RESULTS_DIR}/{{sample}}/counts/coverage_variance.tsv",
-        accessibility = f"{RESULTS_DIR}/{{sample}}/counts/accessibility.tsv",
-        mapq0_proportions = f"{RESULTS_DIR}/{{sample}}/counts/mapq0_proportions.tsv"
+        median_coverage = f"{RESULTS_DIR}/cnv/counts/{{sample}}/median_coverage_by_gc.tsv",
+        variance = f"{RESULTS_DIR}/cnv/counts/{{sample}}/coverage_variance.tsv",
+        accessibility = f"{RESULTS_DIR}/cnv/counts/{{sample}}/accessibility.tsv",
+        mapq0_proportions = f"{RESULTS_DIR}/cnv/counts/{{sample}}/mapq0_proportions.tsv"
     output:
-        hmm_output = f"{RESULTS_DIR}/{{sample}}/hmm/hmm_output.tsv",
-        cnv_calls = f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv"
+        hmm_output = f"{RESULTS_DIR}/cnv/hmm/{{sample}}/hmm_output.tsv",
+        cnv_calls = f"{RESULTS_DIR}/cnv/hmm/{{sample}}/cnv_calls.csv"
     log:
         "logs/cnv/hmm/{sample}.log"
     conda:
@@ -108,11 +110,11 @@ rule run_hmm:
 rule detect_breakpoints:
     input:
         bam = f"{RESULTS_DIR}/region_bams/{{sample}}.sorted.bam",
-        cnv_calls = f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv"
+        cnv_calls = f"{RESULTS_DIR}/cnv/hmm/{{sample}}/cnv_calls.csv"
     output:
-        breakpoints = f"{RESULTS_DIR}/{{sample}}/breakpoints/breakpoints.csv",
-        pre_clipping_fastq = f"{RESULTS_DIR}/{{sample}}/breakpoints/pre_clipping.fastq",
-        post_clipping_fastq = f"{RESULTS_DIR}/{{sample}}/breakpoints/post_clipping.fastq"
+        breakpoints = f"{RESULTS_DIR}/cnv/breakpoints/{{sample}}/breakpoints.csv",
+        pre_clipping_fastq = f"{RESULTS_DIR}/cnv/breakpoints/{{sample}}/pre_clipping.fastq",
+        post_clipping_fastq = f"{RESULTS_DIR}/cnv/breakpoints/{{sample}}/post_clipping.fastq"
     log:
         "logs/cnv/breakpoints/{sample}.log"
     conda:

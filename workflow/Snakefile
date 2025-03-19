@@ -67,4 +67,4 @@ rule all:
         expand("results/gvcfs/{sample}.g.vcf.gz", sample=SAMPLE_NAMES),
         "results/vcf/filtered_snps.vcf.gz",
         #"results/modal_cnvs.csv"
-        expand(f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv", sample=SAMPLE_NAMES),
+        expand(f"{RESULTS_DIR}/cnv/hmm/{{sample}}/cnv_calls.csv", sample=SAMPLE_NAMES),
