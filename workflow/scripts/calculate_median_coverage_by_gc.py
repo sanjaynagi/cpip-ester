@@ -16,9 +16,23 @@ variance_output = snakemake.output.variance
 print(f"Calculating median coverage by GC using counts from: {counts_file}")
 
 # Load input data
-counts_data = pd.read_csv(counts_file, sep='\t')
-gc_data = pd.read_csv(gc_content_file, sep='\t', names=['Chrom', 'Position', 'GC'])
+counts_data = pd.read_csv(counts_file, sep='\t').rename(columns={'Chromosome':'Chrom'})
+
+# Load GC data with correct column names
+gc_data = pd.read_csv(gc_content_file, sep='\t')
+# Rename columns to match expected format
+gc_data = gc_data.rename(columns={
+    'chrom': 'Chrom',
+    'start': 'Position',
+    'gc_content': 'GC'
+})
+
 accessibility_data = pd.read_csv(accessibility_file, sep='\t')
+
+# Ensure all Position columns are numeric
+counts_data['Position'] = pd.to_numeric(counts_data['Position'])
+gc_data['Position'] = pd.to_numeric(gc_data['Position'])
+accessibility_data['Position'] = pd.to_numeric(accessibility_data['Position'])
 
 # Merge data
 data = pd.merge(counts_data, gc_data, on=['Chrom', 'Position'])

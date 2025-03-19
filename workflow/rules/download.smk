@@ -1,7 +1,7 @@
 # Get download links using ffq with rate limiting - updated for SRR processing
 rule get_download_links:
     output:
-        json="results/ffq/{sample}_{srr}.json"
+        json="results/dl/ffq/{sample}_{srr}.json"
     params:
         srr=lambda wildcards: wildcards.srr,
         sleep=lambda x: f"{1 + random.randint(0, 3)}"
@@ -20,10 +20,10 @@ rule get_download_links:
 # Extract URLs from ffq output - updated for SRR processing
 rule extract_urls:
     input:
-        json="results/ffq/{sample}_{srr}.json"
+        json="results/dl/ffq/{sample}_{srr}.json"
     output:
-        r1_url="results/urls/{sample}_{srr}_1.url",
-        r2_url="results/urls/{sample}_{srr}_2.url"
+        r1_url="results/dl/urls/{sample}_{srr}_1.url",
+        r2_url="results/dl/urls/{sample}_{srr}_2.url"
     log:
         "logs/dl/extract_urls/{sample}_{srr}.log"
     shell:
@@ -35,9 +35,9 @@ rule extract_urls:
 # Download and decompress R1 reads - updated for SRR processing
 rule download_r1:
     input:
-        url="results/urls/{sample}_{srr}_1.url"
+        url="results/dl/urls/{sample}_{srr}_1.url"
     output:
-        temp("results/temp_reads/{sample}_{srr}_1.fastq.gz")
+        temp("results/dl/temp_reads/{sample}_{srr}_1.fastq.gz")
     log:
         "logs/dl/dl_r1/{sample}_{srr}.log"
     resources:
@@ -49,9 +49,9 @@ rule download_r1:
 # Download and decompress R2 reads - updated for SRR processing
 rule download_r2:
     input:
-        url="results/urls/{sample}_{srr}_2.url"
+        url="results/dl/urls/{sample}_{srr}_2.url"
     output:
-        temp("results/temp_reads/{sample}_{srr}_2.fastq.gz")
+        temp("results/dl/temp_reads/{sample}_{srr}_2.fastq.gz")
     log:
         "logs/dl/dl_r2/{sample}_{srr}.log"
     resources:

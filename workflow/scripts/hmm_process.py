@@ -93,20 +93,36 @@ def normalize_coverage_by_gc(coverage, median_coverage_by_gc, ploidy=2):
 
 # Load all required data
 print("Loading input data...")
-counts_data = pd.read_csv(counts_file, sep='\t')
-gc_data = pd.read_csv(gc_content_file, sep='\t', names=['Chrom', 'Position', 'GC'])
+counts_data = pd.read_csv(counts_file, sep='\t').rename(columns={'Chromosome':'Chrom'})
+
+# Load GC data with correct column names
+gc_data = pd.read_csv(gc_content_file, sep='\t')
+# Rename columns to match expected format
+gc_data = gc_data.rename(columns={
+    'chrom': 'Chrom',
+    'start': 'Position',
+    'gc_content': 'GC'
+})
+
 median_coverage_by_gc = pd.read_csv(median_coverage_file, sep='\t', index_col='GC')
 variance_data = pd.read_csv(variance_file, sep='\t')
 accessibility_data = pd.read_csv(accessibility_file, sep='\t')
 mapq0_data = pd.read_csv(mapq0_proportions_file, sep='\t')
 
+# Ensure all Position columns are numeric
+counts_data['Position'] = pd.to_numeric(counts_data['Position'])
+gc_data['Position'] = pd.to_numeric(gc_data['Position'])
+accessibility_data['Position'] = pd.to_numeric(accessibility_data['Position'])
+mapq0_data['Position'] = pd.to_numeric(mapq0_data['Position'])
+
 # Create MAPQ0 mask
 mapq0_data['mapq0_acceptable'] = mapq0_data['prop_mapq0'] <= max_mapq0_proportion
 
 # Merge data for processing
-data = pd.merge(counts_data, gc_data, on=['Chrom', 'Position'])
+data = pd.merge(counts_data, gc_data[['Chrom', 'Position', 'GC']], on=['Chrom', 'Position'])
 data = pd.merge(data, mapq0_data[['Chrom', 'Position', 'mapq0_acceptable']], on=['Chrom', 'Position'])
 data = pd.merge(data, accessibility_data[['Chrom', 'Position', 'filterpass']], on=['Chrom', 'Position'])
+
 
 # Apply masks - both MAPQ0 and accessibility
 print("Applying filters...")

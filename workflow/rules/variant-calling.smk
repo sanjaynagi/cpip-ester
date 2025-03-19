@@ -55,8 +55,8 @@ rule haplotype_caller:
         ref_dict=REF_GENOME.replace(".fa", ".dict"),
         ref_fai=REF_GENOME + ".fai"
     output:
-        gvcf="results/gvcfs/{sample}.g.vcf.gz",
-        idx="results/gvcfs/{sample}.g.vcf.gz.tbi"
+        gvcf="results/vcf/gvcfs/{sample}.g.vcf.gz",
+        idx="results/vcf/gvcfs/{sample}.g.vcf.gz.tbi"
     # params:
     #     region=REGION
     log:
@@ -79,13 +79,13 @@ rule haplotype_caller:
 # Combine GVCFs from all samples
 rule combine_gvcfs:
     input:
-        gvcfs=expand("results/gvcfs/{sample}.g.vcf.gz", sample=SAMPLE_NAMES),
+        gvcfs=expand("results/vcf/gvcfs/{sample}.g.vcf.gz", sample=SAMPLE_NAMES),
         ref=REF_GENOME,
         ref_dict=REF_GENOME.replace(".fa", ".dict"),
         ref_fai=REF_GENOME + ".fai"
     output:
-        gvcf="results/combined/combined.g.vcf.gz",
-        idx="results/combined/combined.g.vcf.gz.tbi",
+        gvcf="results/vcf/combined/combined.g.vcf.gz",
+        idx="results/vcf/combined/combined.g.vcf.gz.tbi",
     params:
         gvcfs=lambda wildcards, input: [f"-V {vcf}" for vcf in input.gvcfs],
         # region=REGION
@@ -106,8 +106,8 @@ rule combine_gvcfs:
 # Genotype the combined GVCF
 rule genotype_gvcfs:
     input:
-        gvcf="results/combined/combined.g.vcf.gz",
-        idx="results/combined/combined.g.vcf.gz.tbi",
+        gvcf="results/vcf/combined/combined.g.vcf.gz",
+        idx="results/vcf/combined/combined.g.vcf.gz.tbi",
         ref=REF_GENOME,
         ref_dict=REF_GENOME.replace(".fa", ".dict"),
         ref_fai=REF_GENOME + ".fai"

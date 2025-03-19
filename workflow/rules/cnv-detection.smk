@@ -102,7 +102,8 @@ rule run_hmm:
     params:
         transition_probability = TRANSITION_PROBABILITY,
         max_copy_number = MAX_COPY_NUMBER,
-        max_mapq0_proportion = MAX_MAPQ0_PROPORTION
+        max_mapq0_proportion = MAX_MAPQ0_PROPORTION,
+        window_size = WINDOW_SIZE
     script:
         "../scripts/hmm_process.py"
 
@@ -127,7 +128,7 @@ rule detect_breakpoints:
 # Calculate modal CNVs for all genes in GFF
 rule calculate_modal_cnvs:
     input:
-        cnv_files = expand(f"{RESULTS_DIR}/{{sample}}/hmm/cnv_calls.csv", sample=SAMPLE_NAMES),
+        cnv_files = expand(f"{RESULTS_DIR}/cnv/hmm/{{sample}}/cnv_calls.csv", sample=SAMPLE_NAMES),
         annotation = GFF
     output:
         modal_cnvs = f"{RESULTS_DIR}/modal_cnvs.csv"

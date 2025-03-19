@@ -19,7 +19,7 @@ rule sam_to_sorted_bam:
     input:
         sam="results/pipes/{sample}_{srr}.sam"
     output:
-        bam="results/srr_bams/{sample}_{srr}.sorted.bam"
+        bam=temp("results/srr_bams/{sample}_{srr}.sorted.bam")
     threads: 4
     log:
         "logs/align/sam_to_bam/{sample}_{srr}.log"
@@ -34,7 +34,7 @@ rule index_srr_bam:
     input:
         bam="results/srr_bams/{sample}_{srr}.sorted.bam"
     output:
-        bai="results/srr_bams/{sample}_{srr}.sorted.bam.bai"
+        bai=temp("results/srr_bams/{sample}_{srr}.sorted.bam.bai")
     log:
         "logs/align/bam_index_srr/{sample}_{srr}.log"
     shell:

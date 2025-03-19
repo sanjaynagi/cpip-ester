@@ -36,7 +36,7 @@ for sample, srr_list in sample_to_srr.items():
 
 # Path to reference genome (chromosome of interest)
 REF_GENOME = "resources/Cquinq_JHB2020_CM027412.1_ester.fa" 
-GFF = "blah.gff"
+GFF = "resources/cquinq-ester.gff"
 
 # Specify your region of interest (2Mb region)
 # REGION = "CM027412.1:135390000-139390000"  
@@ -64,7 +64,5 @@ rule all:
         expand("results/region_bams/{sample}.sorted.bam", sample=SAMPLE_NAMES),
         expand("results/region_bams/{sample}.sorted.bam.bai", sample=SAMPLE_NAMES),
         expand("results/coverage/{sample}.regions.bed.gz", sample=SAMPLE_NAMES),
-        expand("results/gvcfs/{sample}.g.vcf.gz", sample=SAMPLE_NAMES),
-        "results/vcf/filtered_snps.vcf.gz",
-        #"results/modal_cnvs.csv"
-        expand(f"{RESULTS_DIR}/cnv/hmm/{{sample}}/cnv_calls.csv", sample=SAMPLE_NAMES),
+        # "results/vcf/filtered_snps.vcf.gz",
+        "results/modal_cnvs.csv",

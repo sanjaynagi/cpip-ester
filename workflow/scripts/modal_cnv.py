@@ -5,8 +5,7 @@ Calculate modal CNVs for all genes in the GFF file
 
 import pandas as pd
 import numpy as np
-import gffutils
-import tempfile
+import allel
 import os
 from collections import Counter
 
@@ -16,41 +15,32 @@ annotation_file = snakemake.input.annotation
 modal_cnvs_file = snakemake.output.modal_cnvs
 samples = snakemake.params.samples
 
-# Create a GFF database for querying
-print("Creating GFF database...")
-db_file = tempfile.NamedTemporaryFile(delete=False).name
-db = gffutils.create_db(
-    annotation_file,
-    dbfn=db_file,
-    force=True,
-    keep_order=True,
-    merge_strategy='merge',
-    sort_attribute_values=True,
-    disable_infer_transcripts=True,
-    disable_infer_genes=True
-)
+# Load GFF file using scikit-allel
+print("Loading GFF file...")
+gff_df = allel.gff3_to_dataframe(annotation_file)
 
-# Get all genes from the GFF file
+# Filter for gene features
 print("Extracting all genes from GFF file...")
-genes = list(db.features_of_type('gene'))
-print(f"Found {len(genes)} genes in the GFF file")
+genes_df = gff_df[gff_df['type'] == 'gene']
+print(f"Found {len(genes_df)} genes in the GFF file")
 
-def get_gene_name(gene):
+def get_gene_name(gene_row):
     """
     Get the name of a gene feature
     
     Parameters:
-    gene: Gene feature from gffutils
+    gene_row: Row from the GFF DataFrame
     
     Returns:
     String with gene name
     """
     # Try different attribute names for gene name
+    attributes = gene_row['attributes']
     for attr in ['ID', 'Name', 'gene_id', 'gene_name']:
-        if attr in gene.attributes:
-            return gene[attr][0]
+        if attr in attributes:
+            return attributes[attr]
     # If no name attributes found, use coordinates
-    return f"{gene.seqid}:{gene.start}-{gene.end}"
+    return f"{gene_row['seqid']}:{gene_row['start']}-{gene_row['end']}"
 
 def calculate_modal_copy_number(cnv_data, chrom, start, end):
     """
@@ -97,6 +87,9 @@ def calculate_modal_copy_number(cnv_data, chrom, start, end):
     
     return modal_cn
 
+chrom, positions = 'CM027412.1:135390000-139390000'.split(':')
+region_start = int(positions.split('-')[0])
+
 # Process each CNV file and gene
 results = []
 
@@ -106,33 +99,35 @@ for i, cnv_file in enumerate(cnv_files):
     
     # Load CNV data
     cnv_data = pd.read_csv(cnv_file)
+
+    cnv_data['Start'] = cnv_data['Start'] + region_start
+    cnv_data['End'] = cnv_data['End'] + region_start
+    cnv_data['Chromosome'] = chrom
     
     # Process each gene
-    for gene in genes:
+    for _, gene in genes_df.iterrows():
         gene_name = get_gene_name(gene)
-        chrom = gene.seqid
-        start = gene.start
-        end = gene.end
+        gene_chrom = gene['seqid']
+        # GFF is 1-based, so we don't need to adjust
+        gene_start = gene['start']
+        gene_end = gene['end']
         
         # Calculate modal copy number
-        modal_cn = calculate_modal_copy_number(cnv_data, chrom, start, end)
+        modal_cn = calculate_modal_copy_number(cnv_data, gene_chrom, gene_start, gene_end)
         
         # Store result
         results.append({
             'Sample': sample,
             'Region': gene_name,
-            'Chromosome': chrom,
-            'Start': start,
-            'End': end,
+            'Chromosome': gene_chrom,
+            'Start': gene_start,
+            'End': gene_end,
             'ModalCopyNumber': modal_cn,
-            'Length': end - start
+            'Length': gene_end - gene_start
         })
 
 # Create and save results
 results_df = pd.DataFrame(results)
 results_df.to_csv(modal_cnvs_file, index=False)
-
-# Clean up temporary database file
-os.unlink(db_file)
 
 print(f"Modal CNV analysis complete. Results saved to {modal_cnvs_file}")
