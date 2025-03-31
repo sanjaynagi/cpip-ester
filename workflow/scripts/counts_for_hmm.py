@@ -2,11 +2,11 @@
 """
 Count reads in genomic windows for HMM-based CNV detection
 """
-
+import sys
+sys.stderr = open(snakemake.log[0], "w")
 import pandas as pd
 import numpy as np
 import pysam
-from snakemake.shell import shell
 
 # Get inputs, outputs, and parameters from Snakemake
 bam_file = snakemake.input.bam

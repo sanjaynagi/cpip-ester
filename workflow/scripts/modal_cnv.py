@@ -17,30 +17,12 @@ samples = snakemake.params.samples
 
 # Load GFF file using scikit-allel
 print("Loading GFF file...")
-gff_df = allel.gff3_to_dataframe(annotation_file)
+gff_df = allel.gff3_to_dataframe(annotation_file, attributes=['ID']).sort_values(['seqid', 'start'])
 
 # Filter for gene features
 print("Extracting all genes from GFF file...")
-genes_df = gff_df[gff_df['type'] == 'gene']
+genes_df = gff_df[gff_df['type'] == 'protein_coding_gene']
 print(f"Found {len(genes_df)} genes in the GFF file")
-
-def get_gene_name(gene_row):
-    """
-    Get the name of a gene feature
-    
-    Parameters:
-    gene_row: Row from the GFF DataFrame
-    
-    Returns:
-    String with gene name
-    """
-    # Try different attribute names for gene name
-    attributes = gene_row['attributes']
-    for attr in ['ID', 'Name', 'gene_id', 'gene_name']:
-        if attr in attributes:
-            return attributes[attr]
-    # If no name attributes found, use coordinates
-    return f"{gene_row['seqid']}:{gene_row['start']}-{gene_row['end']}"
 
 def calculate_modal_copy_number(cnv_data, chrom, start, end):
     """
@@ -106,7 +88,7 @@ for i, cnv_file in enumerate(cnv_files):
     
     # Process each gene
     for _, gene in genes_df.iterrows():
-        gene_name = get_gene_name(gene)
+        gene_name = gene['ID']
         gene_chrom = gene['seqid']
         # GFF is 1-based, so we don't need to adjust
         gene_start = gene['start']

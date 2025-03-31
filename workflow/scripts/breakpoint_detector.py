@@ -2,6 +2,8 @@
 """
 Detect CNV breakpoints using soft-clipped reads in the BAM file
 """
+import sys
+sys.stderr = open(snakemake.log[0], "w")
 
 import pysam
 import pandas as pd

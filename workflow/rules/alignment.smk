@@ -1,8 +1,8 @@
 # Align reads to whole chromosome reference - updated for SRR processing
 rule align_reads:
     input:
-        r1="results/temp_reads/{sample}_{srr}_1.fastq.gz",
-        r2="results/temp_reads/{sample}_{srr}_2.fastq.gz",
+        r1="results/dl/temp_reads/{sample}_{srr}_1.fastq.gz",
+        r2="results/dl/temp_reads/{sample}_{srr}_2.fastq.gz",
         ref=REF_GENOME
     output:
         pipe("results/pipes/{sample}_{srr}.sam")
@@ -40,8 +40,7 @@ rule index_srr_bam:
     shell:
         "samtools index {input.bam} 2> {log}"
 
-# New rule: Merge BAMs for samples with multiple SRR accessions
-rule merge_sample_bams:
+rule merge_sample_bams_and_region:
     input:
         bams=lambda wildcards: expand("results/srr_bams/{sample}_{srr}.sorted.bam", 
                                       sample=wildcards.sample, 
@@ -55,17 +54,19 @@ rule merge_sample_bams:
     log:
         "logs/align/merge_bams/{sample}.log"
     params:
-        # If only one BAM file, use 'cp' instead of 'samtools merge'
+        region=REGION,
+        # If only one BAM file, use direct samtools view instead of merge+view
         cmd=lambda wildcards, input: (
-            "cp" if len(input.bams) == 1 
-            else "samtools merge -f"
+            "samtools view -b" if len(input.bams) == 1 
+            else "samtools merge -f -"
         )
     shell:
         """
-        if [ {params.cmd} = "cp" ]; then
-            {params.cmd} {input.bams[0]} {output.bam} 2> {log}
+        if [ "{params.cmd}" = "samtools view -b" ]; then
+            {params.cmd} {input.bams[0]} {params.region} > {output.bam} 2> {log}
         else
-            {params.cmd} -@ {threads} {output.bam} {input.bams} 2> {log}
+            {params.cmd} -@ {threads} {input.bams} 2> {log} | \
+            samtools view -b -@ {threads} - {params.region} > {output.bam} 2>> {log}
         fi
         """
 
@@ -79,6 +80,7 @@ rule index_final_merged_bam:
         "logs/bam_final/{sample}.log"
     shell:
         "samtools index {input.bam} 2> {log}"
+
 
 # Calculate coverage in 300bp windows using mosdepth
 rule calculate_coverage:
@@ -98,18 +100,3 @@ rule calculate_coverage:
     threads: 4
     shell:
         "mosdepth --no-per-base --by {params.window} --threads {threads} {params.prefix} {input.bam} 2> {log}"
-
-# Extract the 2Mb region of interest and save as final BAM
-# rule extract_region:
-#     input:
-#         bam="results/temp_bams/{sample}.sorted.bam",
-#         bai="results/temp_bams/{sample}.sorted.bam.bai"
-#     output:
-#         bam="results/region_bams/{sample}.bam"
-#     params:
-#         region=REGION
-#     threads: 4
-#     log:
-#         "logs/extract_region/{sample}.log"
-#     shell:
-#         "samtools view -b -h -@ {threads} -o {output.bam} {input.bam} {params.region} 2> {log}"

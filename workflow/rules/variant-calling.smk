@@ -57,8 +57,8 @@ rule haplotype_caller:
     output:
         gvcf="results/vcf/gvcfs/{sample}.g.vcf.gz",
         idx="results/vcf/gvcfs/{sample}.g.vcf.gz.tbi"
-    # params:
-    #     region=REGION
+    params:
+        region=REGION
     log:
         "logs/call/haplotype_caller/{sample}.log"
     resources:
@@ -68,12 +68,12 @@ rule haplotype_caller:
         gatk HaplotypeCaller \
             -R {input.ref} \
             -I {input.bam} \
+            -L {params.region} \
             -O {output.gvcf} \
             --emit-ref-confidence GVCF \
             --create-output-variant-index true 2> {log}
         """
 
-        #            -L {params.region} \
 
 
 # Combine GVCFs from all samples
@@ -88,7 +88,7 @@ rule combine_gvcfs:
         idx="results/vcf/combined/combined.g.vcf.gz.tbi",
     params:
         gvcfs=lambda wildcards, input: [f"-V {vcf}" for vcf in input.gvcfs],
-        # region=REGION
+        region=REGION
     log:
         "logs/call/combine_gvcfs/combine.log"
     resources:
@@ -97,11 +97,10 @@ rule combine_gvcfs:
         """
         gatk CombineGVCFs \
             -R {input.ref} \
+            -L {params.region} \
             {params.gvcfs} \
             -O {output.gvcf} 2> {log}
         """
-
-    # -L {params.region}
 
 # Genotype the combined GVCF
 rule genotype_gvcfs:
@@ -114,8 +113,8 @@ rule genotype_gvcfs:
     output:
         vcf="results/vcf/raw_variants.vcf.gz",
         idx="results/vcf/raw_variants.vcf.gz.tbi"
-    # params:
-    #     region=REGION
+    params:
+        region=REGION
     log:
         "logs/call/genotype_gvcfs/genotype.log"
     resources:
@@ -125,14 +124,10 @@ rule genotype_gvcfs:
         gatk GenotypeGVCFs \
             -R {input.ref} \
             -V {input.gvcf} \
+            -L {params.region} \
             -O {output.vcf} \
             --create-output-variant-index true 2> {log}
         """
-
-#            -L {params.region} \
-
-
-
 
 # Extract only SNPs
 rule extract_snps:

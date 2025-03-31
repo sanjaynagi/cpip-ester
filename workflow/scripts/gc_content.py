@@ -6,6 +6,8 @@ and calculates the GC content for each window.
 
 To be used with Snakemake's script directive.
 """
+import sys
+sys.stderr = open(snakemake.log[0], "w")
 
 import logging
 import os

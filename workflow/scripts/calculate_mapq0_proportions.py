@@ -2,7 +2,8 @@
 """
 Calculate the proportion of MAPQ0 reads in genomic windows
 """
-
+import sys
+sys.stderr = open(snakemake.log[0], "w")
 import pandas as pd
 import numpy as np
 import pysam

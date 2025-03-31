@@ -149,7 +149,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/nest-asyncio-1.6.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/notebook-7.3.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/notebook-shim-0.2.4-pyhd8ed1ab_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.2.3-py311h5d046bc_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.2.4-py311h5d046bc_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/oniguruma-6.9.10-hb9d3cd8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openssl-3.4.1-h7b32b05_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/overrides-7.7.0-pyhd8ed1ab_1.conda
@@ -2366,9 +2366,9 @@ packages:
   - pkg:pypi/notebook-shim?source=hash-mapping
   size: 16817
   timestamp: 1733408419340
-- conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.2.3-py311h5d046bc_0.conda
-  sha256: 9ff5ab34612b78ffcad42f33ef821594584eec30f8f24df600b5581831975378
-  md5: 6de29798b2e278c56f1e87b7d6e693bb
+- conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.2.4-py311h5d046bc_0.conda
+  sha256: 4ff5f5ab2e0205d712fdc8b2950a2a4b2a063c47d0c9b08f7ea71ae246e47ac1
+  md5: 16ad2b996ea8064e0a7cb8b392d924fd
   depends:
   - __glibc >=2.17,<3.0.a0
   - libblas >=3.9.0,<4.0a0
@@ -2383,9 +2383,9 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/numpy?source=hash-mapping
-  size: 9065890
-  timestamp: 1739425997956
+  - pkg:pypi/numpy?source=compressed-mapping
+  size: 9005152
+  timestamp: 1742255389691
 - conda: https://conda.anaconda.org/conda-forge/linux-64/oniguruma-6.9.10-hb9d3cd8_0.conda
   sha256: bbff8a60f70d5ebab138b564554f28258472e1e63178614562d4feee29d10da2
   md5: 6ce853cb231f18576d2db5c2d4cb473e

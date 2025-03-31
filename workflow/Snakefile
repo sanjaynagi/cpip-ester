@@ -1,14 +1,19 @@
-# Snakefile
-
 import pandas as pd
-from snakemake.utils import min_version
 import random
 
-# Set minimum Snakemake version
-min_version("6.0")
+REF_GENOME = "resources/VectorBase-68_CquinquefasciatusJHB2020_Genome.fasta" 
+GFF = "resources/VectorBase-68_CquinquefasciatusJHB2020.gff"
+REGION = "CM027412.1:136390000-138390000"  
 
+WINDOW_SIZE = 300
+INTERVAL = 300
+MAPQ_THRESHOLD = 10
+MAX_MAPQ0_PROPORTION = 0.5
+ACCESSIBILITY_THRESHOLD = 0.5
+MAX_COPY_NUMBER = 12
+TRANSITION_PROBABILITY = 0.00001
 
-# Load the SRA metadata table
+# Load metadata
 metadata = pd.read_csv("resources/SraRunTable.csv")
 SAMPLE_NAMES_WITH_2_SRRs =  metadata['Sample Name'].value_counts()[metadata['Sample Name'].value_counts() > 1].index.to_numpy()
 metadata = metadata[:100].query("`Sample Name` not in ['SWE4', 'MTC1']")
@@ -23,10 +28,11 @@ for index, row in metadata.iterrows():
     else:
         sample_to_srr[sample] = [srr]
 
-# Get all sample names (unique)
 SAMPLE_NAMES = list(sample_to_srr.keys())
 # filter out samples with more than 2 srrs for now TESTING ONLY ---- REMOVE FOR PRODUCTION
-SAMPLE_NAMES = [n for n in SAMPLE_NAMES  if n not in  SAMPLE_NAMES_WITH_2_SRRs]
+SAMPLE_NAMES = [n for n in SAMPLE_NAMES  if n not in SAMPLE_NAMES_WITH_2_SRRs]
+
+metadata.query("`Sample Name` in @SAMPLE_NAMES").to_csv("results/metadata.tsv", sep="\t")
 
 # Create a list of all sample-srr pairs for rules that process each SRR file
 SAMPLE_SRR_PAIRS = []
@@ -34,23 +40,6 @@ for sample, srr_list in sample_to_srr.items():
     for srr in srr_list:
         SAMPLE_SRR_PAIRS.append((sample, srr))
 
-# Path to reference genome (chromosome of interest)
-REF_GENOME = "resources/Cquinq_JHB2020_CM027412.1_ester.fa" 
-GFF = "resources/cquinq-ester.gff"
-
-# Specify your region of interest (2Mb region)
-# REGION = "CM027412.1:135390000-139390000"  
-
-
-### CNV parameters ###
-# Window size for coverage calculation
-WINDOW_SIZE = 300
-INTERVAL = 300
-MAPQ_THRESHOLD = 10
-MAX_MAPQ0_PROPORTION = 0.5
-ACCESSIBILITY_THRESHOLD = 0.5
-MAX_COPY_NUMBER = 12
-TRANSITION_PROBABILITY = 0.00001
 
 include: "rules/alignment.smk"
 include: "rules/download.smk"
@@ -64,5 +53,6 @@ rule all:
         expand("results/region_bams/{sample}.sorted.bam", sample=SAMPLE_NAMES),
         expand("results/region_bams/{sample}.sorted.bam.bai", sample=SAMPLE_NAMES),
         expand("results/coverage/{sample}.regions.bed.gz", sample=SAMPLE_NAMES),
-        # "results/vcf/filtered_snps.vcf.gz",
-        "results/modal_cnvs.csv",
+        "results/vcf/filtered_snps.vcf.gz"
+        # expand("results/cnv/{sample}/breakpoints.csv", sample=SAMPLE_NAMES),
+        # "results/modal_cnvs.csv",
