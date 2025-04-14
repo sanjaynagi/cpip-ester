@@ -157,8 +157,6 @@ for sample_idx, sample in enumerate(sample_names):
     mapq0_data['mapq0_acceptable'] = mapq0_data['prop_mapq0'] <= max_mapq0_proportion
     
     # Rename columns if needed
-    if 'Chromosome' in counts_data.columns:
-        counts_data = counts_data.rename(columns={'Chromosome':'Chrom'})
     if 'Counts total' in counts_data.columns:
         counts_data = counts_data.rename(columns={'Counts total':'Counts_total'})
     

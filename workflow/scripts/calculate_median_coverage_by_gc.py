@@ -78,8 +78,6 @@ for i, sample in enumerate(sample_names):
     counts_data = pd.read_csv(counts_file, sep='\t')
     
     # Rename columns to match original script if needed
-    if 'Chromosome' in counts_data.columns:
-        counts_data = counts_data.rename(columns={'Chromosome':'Chrom'})
     if 'Counts total' in counts_data.columns:
         counts_data = counts_data.rename(columns={'Counts total':'Counts_total'})
     

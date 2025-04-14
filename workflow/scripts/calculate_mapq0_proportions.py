@@ -21,48 +21,49 @@ print(f"Window size: {window_size}bp, Interval: {interval}bp")
 alignment = pysam.AlignmentFile(bam_file, 'rb')
 
 # Get chromosomes and their lengths
-chromosomes = alignment.references
-chromosome_lengths = alignment.lengths
+chromosomes = np.array(alignment.references)
+chromosome_lengths = np.array(alignment.lengths)
+
+mask = chromosomes == "CM027412.1"
+chrom = chromosomes[mask][0]
+chrom_length = chromosome_lengths[mask][0]
 
 # Initialize results dataframe
 results = []
+print(f"Processing chromosome {chrom} ({chrom_length}bp)")
 
-# Process each chromosome
-for chrom, chrom_length in zip(chromosomes, chromosome_lengths):
-    print(f"Processing chromosome {chrom} ({chrom_length}bp)")
+# Define windows
+positions = range(0, chrom_length, interval)
+
+# Process each window
+for pos in positions:
+    # Fetch alignments in this window
+    alignments = alignment.fetch(chrom, pos, min(pos + window_size, chrom_length))
     
-    # Define windows
-    positions = range(0, chrom_length, interval)
+    # Count reads by MAPQ
+    count_mapq0 = 0
+    count_mapq_above0 = 0
     
-    # Process each window
-    for pos in positions:
-        # Fetch alignments in this window
-        alignments = alignment.fetch(chrom, pos, min(pos + window_size, chrom_length))
-        
-        # Count reads by MAPQ
-        count_mapq0 = 0
-        count_mapq_above0 = 0
-        
-        for read in alignments:
-            if not read.is_unmapped:
-                if read.reference_start >= pos:
-                    if read.mapping_quality == 0:
-                        count_mapq0 += 1
-                    else:
-                        count_mapq_above0 += 1
-        
-        # Calculate proportion
-        total_reads = count_mapq0 + count_mapq_above0
-        prop_mapq0 = count_mapq0 / total_reads if total_reads > 0 else np.nan
-        
-        # Store results
-        results.append({
-            'Chrom': chrom,
-            'Position': pos,
-            'Count mapq = 0': count_mapq0,
-            'Count mapq > 0': count_mapq_above0,
-            'prop_mapq0': prop_mapq0
-        })
+    for read in alignments:
+        if not read.is_unmapped:
+            if read.reference_start >= pos:
+                if read.mapping_quality == 0:
+                    count_mapq0 += 1
+                else:
+                    count_mapq_above0 += 1
+    
+    # Calculate proportion
+    total_reads = count_mapq0 + count_mapq_above0
+    prop_mapq0 = count_mapq0 / total_reads if total_reads > 0 else np.nan
+    
+    # Store results
+    results.append({
+        'Chrom': chrom,
+        'Position': pos,
+        'Count mapq = 0': count_mapq0,
+        'Count mapq > 0': count_mapq_above0,
+        'prop_mapq0': prop_mapq0
+    })
 
 # Create dataframe and save results
 df = pd.DataFrame(results)

@@ -4,6 +4,8 @@ import random
 REF_GENOME = "resources/VectorBase-68_CquinquefasciatusJHB2020_Genome.fasta" 
 GFF = "resources/VectorBase-68_CquinquefasciatusJHB2020.gff"
 REGION = "CM027412.1:136390000-138390000"  
+CONTIG = "CM027412.1" 
+CONTIG_REF_GENOME="/home/snagi/lstm_scratch/hp_scratch/cpip-ester/resources/Cquinq_JHB2020_CM027412.1.fa"
 
 WINDOW_SIZE = 300
 INTERVAL = 300
@@ -46,13 +48,12 @@ include: "rules/download.smk"
 include: "rules/variant-calling.smk"
 include: "rules/cnv-detection.smk"
 
-# Final output files
 rule all:
     input:
         # Final BAM files (2Mb region)
         expand("results/region_bams/{sample}.sorted.bam", sample=SAMPLE_NAMES),
         expand("results/region_bams/{sample}.sorted.bam.bai", sample=SAMPLE_NAMES),
         expand("results/coverage/{sample}.regions.bed.gz", sample=SAMPLE_NAMES),
-        "results/vcf/filtered_snps.vcf.gz"
+        "results/vcf/filtered_snps.vcf.gz",
         # expand("results/cnv/{sample}/breakpoints.csv", sample=SAMPLE_NAMES),
-        # "results/modal_cnvs.csv",
+        "results/modal_cnvs.csv",

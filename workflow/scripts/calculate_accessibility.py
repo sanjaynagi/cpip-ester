@@ -27,6 +27,8 @@ gc_data = gc_data.rename(columns={
     'gc_content': 'GC'
 })
 
+gc_data = gc_data.query("Chrom == 'CM027412.1'")
+
 # Load MAPQ0 proportions data
 mapq0_data = pd.read_csv(mapq0_proportions_file, sep='\t')
 

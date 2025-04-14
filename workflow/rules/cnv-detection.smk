@@ -3,7 +3,7 @@ RESULTS_DIR = "results"
 # Calculate GC content for genomic windows
 rule calculate_gc_content:
     input:
-        reference = REF_GENOME
+        reference = CONTIG_REF_GENOME
     output:
         gc_content = "results/gc_content.tsv"
     log:
@@ -20,7 +20,8 @@ rule calculate_gc_content:
 # Extract read counts in windows
 rule extract_counts_for_hmm:
     input:
-        bam = "results/region_bams/{sample}.sorted.bam"
+        bam = "results/region_bams/{sample}.sorted.bam",
+        bai = "results/region_bams/{sample}.sorted.bam.bai"
     output:
         counts = "results/cnv/{sample}/counts_for_hmm.tsv"
     log:
@@ -37,7 +38,8 @@ rule extract_counts_for_hmm:
 # Calculate the proportion of MAPQ0 reads in each window
 rule calculate_mapq0_proportions:
     input:
-        bam = "results/region_bams/{sample}.sorted.bam"
+        bam = "results/region_bams/{sample}.sorted.bam",
+        bai = "results/region_bams/{sample}.sorted.bam.bai"
     output:
         mapq0_proportions = "results/cnv/{sample}/mapq0_proportions.tsv"
     log:
